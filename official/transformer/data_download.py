@@ -33,6 +33,8 @@ import tensorflow as tf
 from official.transformer.utils import tokenizer
 from official.utils.flags import core as flags_core
 
+import pdb
+
 # Data sources for training/evaluating the transformer translation model.
 # If any of the training sources are changed, then either:
 #   1) use the flag `--search` to find the best min count or
@@ -40,6 +42,7 @@ from official.utils.flags import core as flags_core
 # min_count is the minimum number of times a token must appear in the data
 # before it is added to the vocabulary. "Best min count" refers to the value
 # that generates a vocabulary set that is closest in size to _TARGET_VOCAB_SIZE.
+'''
 _TRAIN_DATA_SOURCES = [
     {
         "url": "http://data.statmt.org/wmt17/translation-task/"
@@ -56,11 +59,20 @@ _TRAIN_DATA_SOURCES = [
         "url": "http://www.statmt.org/wmt13/training-parallel-europarl-v7.tgz",
         "input": "europarl-v7.de-en.en",
         "target": "europarl-v7.de-en.de",
-    },
+    }
 ]
+'''
+_TRAIN_DATA_SOURCES = [
+    {
+        "url": "",
+        "input": "train.en",
+        "target": "train.ko",
+    }
+]
+
 # Use pre-defined minimum count to generate subtoken vocabulary.
 _TRAIN_DATA_MIN_COUNT = 6
-
+'''
 _EVAL_DATA_SOURCES = [
     {
         "url": "http://data.statmt.org/wmt17/translation-task/dev.tgz",
@@ -68,6 +80,15 @@ _EVAL_DATA_SOURCES = [
         "target": "newstest2013.de",
     }
 ]
+'''
+_EVAL_DATA_SOURCES = [
+    {
+        "url": "",
+        "input": "dev.en",
+        "target": "dev.ko",
+    }
+]
+
 
 # Vocabulary constants
 _TARGET_VOCAB_SIZE = 32768  # Number of subtokens in the vocabulary list.
@@ -82,6 +103,7 @@ _EVAL_TAG = "dev"  # Following WMT and Tensor2Tensor conventions, in which the
 
 # Number of files to split train and evaluation data
 _TRAIN_SHARDS = 100
+#_TRAIN_SHARDS = 10
 _EVAL_SHARDS = 1
 
 
@@ -376,6 +398,8 @@ def main(unused_argv):
   tf.logging.info("Step 2/4: Creating subtokenizer and building vocabulary")
   train_files_flat = train_files["inputs"] + train_files["targets"]
   vocab_file = os.path.join(FLAGS.data_dir, VOCAB_FILE)
+  #pdb.set_trace() #
+
   subtokenizer = tokenizer.Subtokenizer.init_from_files(
       vocab_file, train_files_flat, _TARGET_VOCAB_SIZE, _TARGET_THRESHOLD,
       min_count=None if FLAGS.search else _TRAIN_DATA_MIN_COUNT)
@@ -383,6 +407,7 @@ def main(unused_argv):
   tf.logging.info("Step 3/4: Compiling training and evaluation data")
   compiled_train_files = compile_files(FLAGS.raw_dir, train_files, _TRAIN_TAG)
   compiled_eval_files = compile_files(FLAGS.raw_dir, eval_files, _EVAL_TAG)
+
 
   # Tokenize and save data as Examples in the TFRecord format.
   tf.logging.info("Step 4/4: Preprocessing and saving data")
@@ -392,6 +417,7 @@ def main(unused_argv):
   encode_and_save_files(
       subtokenizer, FLAGS.data_dir, compiled_eval_files, _EVAL_TAG,
       _EVAL_SHARDS)
+  #pdb.set_trace()
 
   for fname in train_tfrecord_files:
     shuffle_records(fname)
